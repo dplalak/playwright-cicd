@@ -1,0 +1,22 @@
+node_modules/
+bundle.js
+npm-debug.log
+
+/.idea
+/public
+
+.env
+server/src/.env
+.passport.js
+.DS_Store
+
+build/
+dist/
+client/.parcel-cache
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

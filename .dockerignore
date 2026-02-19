@@ -1,0 +1,11 @@
+# Root .dockerignore (np. przy budowaniu z kontekstu .)
+node_modules
+client/node_modules
+server/node_modules
+docs
+.git
+.github
+.env
+*.log
+playwright-report
+test-results

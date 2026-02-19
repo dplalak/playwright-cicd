@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [release/*]
+  pull_request:
+    branches: [master, release/*, develop]
+
+jobs:
+  lint-playwright:
+    name: Lint Playwright
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Lint Playwright e2e
+        run: npm run lint:playwright
+
+  playwright:
+    name: Playwright (${{ matrix.project }})
+    needs: lint-playwright
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: Desktop Chrome
+            id: desktop
+          - project: Mobile Chrome
+            id: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: "Start stack (Docker Compose: Mongo + Server + Client)"
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          docker compose up -d --build
+          npx wait-on tcp:8000 http://localhost:3000 --timeout 120000
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright e2e
+        env:
+          BASE_URL: http://localhost:3000
+          API_URL: http://localhost:8000
+          EMAIL: ${{ secrets.EMAIL }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+        run: npx playwright test --config=playwright/playwright.config.ts --project="${{ matrix.project }}"
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-results-${{ matrix.id }}
+          path: playwright-report/
+          retention-days: 1
+
+      - name: Stop Docker Compose
+        if: ${{ always() }}
+        run: docker compose down
+
+  deploy-report:
+    name: Deploy Playwright report to GitHub Pages
+    if: ${{ (github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/release/'))) || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}
+    needs: playwright
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download Playwright artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: playwright-results-*
+          path: artifacts
+
+      - name: Build Pages content
+        run: |
+          mkdir -p site
+          cp -r artifacts/playwright-results-desktop site/desktop
+          cp -r artifacts/playwright-results-mobile site/mobile
+          cat > site/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>Playwright Reports</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 2rem; }
+              ul { line-height: 1.8; }
+            </style>
+          </head>
+          <body>
+            <h1>Playwright Reports</h1>
+            <ul>
+              <li><a href="./desktop/index.html">Desktop Chrome report</a></li>
+              <li><a href="./mobile/index.html">Mobile Chrome report</a></li>
+            </ul>
+          </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
