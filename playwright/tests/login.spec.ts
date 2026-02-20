@@ -28,7 +28,7 @@ test.describe('Login tests', () => {
     const loginPage = new LoginPage(page);
     await loginPage.login(`${process.env.EMAIL}`, testUsers.invalidUser.password);
     await expect(page).toHaveURL(`${baseURL}` + '#/signin');
-    await expect(loginPage.errorAlert).toHaveText('Oops! Invalid emaild or password');
+    await expect(loginPage.errorAlert).toHaveText('Oops! Invalid email or password');
     await expect(loginPage.loginButton).toBeVisible();
   })
 })
