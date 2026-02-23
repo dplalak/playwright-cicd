@@ -18,7 +18,7 @@ test.describe('Registration tests', () => {
       password,
       password
     );
-    await expect(page).toHaveURL(`${baseURL}` + '/#account', { timeout: 10000 });
+    await expect(page).toHaveURL(`${baseURL}` + '/#/account', { timeout: 10000 });
     await expect(registrationPage.registerButton).toBeHidden();
   })
 
