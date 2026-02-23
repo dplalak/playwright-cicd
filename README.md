@@ -74,6 +74,10 @@ docker compose down
   - valid registration
   - password mismatch
   - existing email
+- Account scenarios:
+  - unauthenticated redirect to sign in
+  - authenticated profile view
+  - edit mode open + cancel without persisting changes
 - Smoke subset:
   - tagged with `@Smoke` for fast confidence checks
 
@@ -130,6 +134,7 @@ Run selected suites:
 ```bash
 npm run test:login
 npm run test:registration
+npm run test:account
 ```
 
 ### Recommended local test flow
@@ -149,7 +154,7 @@ npm run test:registration
 
 - Use UI mode for step-by-step diagnosis
 - Inspect generated `playwright-report/`
-- Re-run only one suite (`login` or `registration`) to isolate failures
+- Re-run only one suite (`login`, `registration`, or `account`) to isolate failures
 
 ### Playwright linting safeguards
 
