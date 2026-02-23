@@ -11,6 +11,7 @@
     "test:mobile": "playwright test --config=playwright/playwright.config.ts --project=\"Mobile Chrome\"",
     "test:login": "playwright test --config=playwright/playwright.config.ts --project=\"Desktop Chrome\" --test-only login.spec.ts",
     "test:registration": "playwright test --config=playwright/playwright.config.ts --project=\"Desktop Chrome\" --test-only registration.spec.ts",
+    "test:account": "playwright test --config=playwright/playwright.config.ts --project=\"Desktop Chrome\" --test-only account.spec.ts",
     "precommit": "npm test",
     "prepush": "npm test",
     "heroku:add": "heroku git:remote -a",
