@@ -12,7 +12,7 @@ test.describe('Login tests', () => {
     await createUserViaAPI();
     const loginPage = new LoginPage(page);
     await loginPage.login(`${process.env.EMAIL}`, `${process.env.PASSWORD}`);
-    await expect(page).toHaveURL(`${baseURL}` + '/#account', { timeout: 10000 });
+    await expect(page).toHaveURL(`${baseURL}` + '/#/account', { timeout: 10000 });
     await expect(loginPage.loginButton).toBeHidden();
   })
 
